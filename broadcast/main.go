@@ -24,7 +24,7 @@ func main() {
 		for {
 			select {
 			case <-ticker.C:
-				s.GossipMissedUpdates()
+				go s.GossipMissedUpdates()
 			}
 		}
 	}()
@@ -120,9 +120,12 @@ func (s *server) HandleBroadcastOk(node string, message int) {
 }
 
 func (s *server) GossipMissedUpdates() {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
 	for node, updates := range s.missedUpdates {
 		for update := range updates {
-			s.Gossip(node, update)
+			go s.Gossip(node, update)
 		}
 	}
 }
